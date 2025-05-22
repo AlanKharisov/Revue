@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MARKIdentity - NFT Platform</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Alata&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #f5f5f5;
+        }
+
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(135deg, #1a1a2e, #16213e);
+            z-index: -1;
+        }
+
+        /* Screens */
+        .screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Splash Screen */
+        .mark-identity {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 700;
+            font-size: 54px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            letter-spacing: 0.5px;
+            color: white;
+        }
+
+        .mark-identity span {
+            font-family: 'Alata', sans-serif;
+            font-weight: 400;
+            font-size: 28px;
+            letter-spacing: 0.3px;
+            color: #01FF77;
+        }
+
+        /* Auth Screen */
+        .auth-container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 350px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: #000;
+            border: none;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 12px;
+            margin-top: 10px;
+        }
+
+        /* Wallet Creation Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            width: 85%;
+            max-width: 350px;
+            text-align: center;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .create-btn {
+            background: #01FF77;
+            color: black;
+        }
+
+        .skip-btn {
+            background: #f5f5f5;
+            color: black;
+        }
+
+        /* App Content */
+        .app-content {
+            display: none;
+            height: 100vh;
+            overflow-y: auto;
+            background-color: #f5f5f5;
+        }
+
+        .app-content.active {
+            display: block;
+        }
+
+        .page {
+            display: none;
+            padding-bottom: 70px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Home Page */
+        .home-page .search-bar {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: white;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .home-page .search-input {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background-color: #f5f5f5;
+            border-radius: 20px;
+            padding: 8px 15px;
+            margin: 0 10px;
+        }
+
+        .home-page .search-input i {
+            color: #888;
+            margin-right: 8px;
+        }
+
+        .home-page .search-input input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 16px;
+        }
+
+        .home-page .nft-post {
+            background-color: white;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .home-page .user-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .home-page .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ddd;
+            margin-right: 10px;
+            overflow: hidden;
+        }
+
+        .home-page .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .home-page .username {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .home-page .post-time {
+            font-size: 12px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .home-page .nft-title {
+            color: #01FF77;
+            font-weight: bold;
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        .home-page .nft-description {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .home-page .tags {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .home-page .tag {
+            color: #01FF77;
+            font-size: 12px;
+            margin-right: 8px;
+            margin-bottom: 5px;
+        }
+
+        .home-page .nft-image {
+            width: 100%;
+            height: 200px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .home-page .nft-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .home-page .post-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .home-page .action-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .home-page .like-btn, 
+        .home-page .comment-btn {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .home-page .like-btn i, 
+        .home-page .comment-btn i {
+            margin-right: 5px;
+            font-size: 18px;
+        }
+
+        .home-page .buy-btn {
+            background-color: #01FF77;
+            color: #000;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 20px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* Comments Section */
+        .comments-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .comment {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .comment-user {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .add-comment {
+            display: flex;
+            margin-top: 10px;
+        }
+
+        .add-comment input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px 0 0 5px;
+            outline: none;
+        }
+
+        .add-comment button {
+            padding: 0 15px;
+            background: #01FF77;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+            color: black;
+            font-weight: bold;
+        }
+
+        /* Purchase Alert */
+        .purchase-alert {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #01FF77;
+            color: black;
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .purchase-alert h3 {
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
+        /* Wallet Page */
+        .wallet-section {
+            padding: 15px;
+        }
+
+        .wallet-title {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+            padding-top: 10px;
+            color: #333;
+        }
+
+        .nft-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .nft-item {
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: white;
+            aspect-ratio: 1;
+            position: relative;
+            border: 1px solid #e0e0e0;
+            cursor: pointer;
+            perspective: 1000px;
+        }
+
+        .nft-front, .nft-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            transition: transform 0.6s;
+        }
+
+        .nft-front {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nft-back {
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotateY(180deg);
+            padding: 10px;
+        }
+
+        .nft-item.flipped .nft-front {
+            transform: rotateY(180deg);
+        }
+
+        .nft-item.flipped .nft-back {
+            transform: rotateY(0deg);
+        }
+
+        .nft-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Add NFT Page */
+        .add-nft-page {
+            padding: 20px;
+        }
+
+        .add-nft-title {
+            font-weight: bold;
+            font-size: 20px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .upload-area:hover {
+            border-color: #01FF77;
+        }
+
+        .upload-icon {
+            width: 60px;
+            height: 60px;
+            background-color: #f5f5f5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+
+        .upload-text {
+            text-align: left;
+        }
+
+        .upload-text strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .upload-text small {
+            color: #888;
+            font-size: 12px;
+            display: block;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f5f5f5;
+            margin-bottom: 15px;
+        }
+
+        .ownership-options {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .ownership-option {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-right: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .ownership-option:last-child {
+            margin-right: 0;
+        }
+
+        .ownership-option.selected {
+            border-color: #01FF77;
+            background-color: #f0fff0;
+        }
+
+        .ownership-option i {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .create-nft-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: #01FF77;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            background-color: white;
+            border-top: 1px solid #ddd;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 500px;
+            z-index: 100;
+        }
+
+        .nav-item {
+            text-align: center;
+            padding: 5px;
+            cursor: pointer;
+            color: #888;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .nav-item i {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .nav-item.active {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Background -->
+        <div class="background"></div>
+
+        <!-- Splash Screen -->
+        <div class="screen splash-screen" :class="{active: currentScreen === 'splash'}">
+            <div class="content">
+                <h1 class="mark-identity">MARK<span>Identity</span></h1>
+            </div>
+        </div>
+
+        <!-- Auth Screen -->
+        <div class="screen auth-screen" :class="{active: currentScreen === 'auth'}">
+            <div class="auth-container">
+                <form @submit.prevent="handleAuth">
+                    <h2 style="text-align: center; margin-bottom: 20px;">Sign In</h2>
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" placeholder="Enter username" v-model="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" placeholder="Enter password" v-model="password" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Sign In</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Wallet Creation Modal -->
+        <div class="modal-overlay" v-if="showWalletModal">
+            <div class="modal-content">
+                <h3>Create Wallet</h3>
+                <p>Would you like to create a wallet now?</p>
+                <div class="modal-buttons">
+                    <button class="modal-btn create-btn" @click="createWallet">Create</button>
+                    <button class="modal-btn skip-btn" @click="skipWallet">Skip</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Purchase Alert -->
+        <div class="purchase-alert" v-if="showPurchaseAlert">
+            <h3>New NFT Successfully Purchased</h3>
+            <p>You bought {{ purchaseDetails.nftName }} from {{ purchaseDetails.seller }}</p>
+        </div>
+
+        <!-- App Content -->
+        <div class="app-content" :class="{active: currentScreen === 'app'}">
+            <!-- Home Page -->
+            <div class="page home-page" :class="{active: currentPage === 'home'}">
+                <div class="search-bar">
+                    <div class="search-input">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search NFTs...">
+                    </div>
+                </div>
+                
+                <div class="nft-post" v-for="post in posts" :key="post.id">
+                    <div class="user-info">
+                        <div class="avatar">
+                            <img :src="post.avatar" alt="User Avatar">
+                        </div>
+                        <div>
+                            <div class="username">{{ post.username }}</div>
+                            <div class="post-time">{{ post.time }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="nft-title">{{ post.title }}</div>
+                    <div class="nft-description">{{ post.description }}</div>
+                    
+                    <div class="tags">
+                        <div class="tag" v-for="(tag, index) in post.tags" :key="index">{{ tag }}</div>
+                    </div>
+                    
+                    <div class="nft-image">
+                        <img :src="post.image" alt="NFT Image">
+                    </div>
+                    
+                    <div class="post-actions">
+                        <div class="action-left">
+                            <div class="like-btn" @click="toggleLike(post.id)">
+                                <i :class="post.isLiked ? 'fas fa-heart' : 'far fa-heart'" 
+                                   :style="{color: post.isLiked ? 'red' : 'inherit'}"></i> 
+                                {{ post.likes }}
+                            </div>
+                            <div class="comment-btn" @click="toggleComments(post.id)">
+                                <i class="far fa-comment"></i> {{ post.comments }}
+                            </div>
+                        </div>
+                        <button class="buy-btn" @click="buyNFT(post)">Buy</button>
+                    </div>
+                    
+                    <div class="comments-section" v-if="post.showComments">
+                        <div class="comment" v-for="(comment, index) in post.commentsList" :key="index">
+                            <span class="comment-user">{{ comment.user }}:</span> {{ comment.text }}
+                        </div>
+                        <div class="add-comment">
+                            <input type="text" v-model="post.newComment" placeholder="Add a comment..." @keyup.enter="addComment(post.id)">
+                            <button @click="addComment(post.id)">Post</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Wallet Page -->
+            <div class="page wallet-page" :class="{active: currentPage === 'wallet'}">
+                <div class="wallet-section">
+                    <h1 class="wallet-title">Your Wallet</h1>
+                    
+                    <div class="nft-container">
+                        <div class="nft-item" 
+                             v-for="nft in purchasedNFTs" 
+                             :key="nft.id" 
+                             :class="{flipped: flippedNFTs[nft.id]}"
+                             @click="toggleFlip(nft.id)">
+                            <div class="nft-front">
+                                <img :src="nft.image" alt="NFT">
+                            </div>
+                            <div class="nft-back" id="qr-code-container">
+                                <div :id="'qrcode-' + nft.id"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add NFT Page -->
+            <div class="page add-nft-page" :class="{active: currentPage === 'add-nft'}">
+                <h2 class="add-nft-title">Create NFT</h2>
+                
+                <div class="form-section">
+                    <span class="section-title">Property NFT Type</span>
+                    <div class="ownership-options">
+                        <div class="ownership-option" 
+                             :class="{selected: ownershipType === 'own'}"
+                             @click="ownershipType = 'own'">
+                            <i class="fas fa-user"></i>
+                            <div>Own</div>
+                        </div>
+                        <div class="ownership-option" 
+                             :class="{selected: ownershipType === 'coauthored'}"
+                             @click="ownershipType = 'coauthored'">
+                            <i class="fas fa-users"></i>
+                            <div>Co-authored</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <span class="section-title">NFT name*</span>
+                    <input type="text" class="text-input" placeholder="Enter NFT name" v-model="nftName">
+                </div>
+                
+                <div class="form-section">
+                    <span class="section-title">NFT image*</span>
+                    <div class="upload-area" @click="triggerFileInput">
+                        <div class="upload-icon">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        <div class="upload-text">
+                            <strong>Drag and drop or click to upload</strong>
+                            <small>Recommended size: 350 x 350. File types: JPG, PNG, SVG, or GIF</small>
+                        </div>
+                        <input type="file" id="nft-upload" style="display: none;" @change="handleNftUpload">
+                    </div>
+                    <div v-if="nftImagePreview" style="margin-top: 10px;">
+                        <img :src="nftImagePreview" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <span class="section-title">Description*</span>
+                    <textarea class="text-input" rows="3" placeholder="Enter description here..." v-model="nftDescription"></textarea>
+                </div>
+                
+                <div class="form-section">
+                    <span class="section-title">Tags*</span>
+                    <input type="text" class="text-input" placeholder="Enter tags (comma separated)" v-model="nftTags">
+                </div>
+                
+                <button class="create-nft-btn" @click="createNFT">Create NFT</button>
+            </div>
+            
+            <!-- Bottom Navigation -->
+            <div class="bottom-nav">
+                <div class="nav-item" :class="{active: currentPage === 'home'}" @click="currentPage = 'home'">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </div>
+                <div class="nav-item" :class="{active: currentPage === 'wallet'}" @click="currentPage = 'wallet'">
+                    <i class="fas fa-wallet"></i>
+                    <span>Wallet</span>
+                </div>
+                <div class="nav-item" :class="{active: currentPage === 'add-nft'}" @click="currentPage = 'add-nft'">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Add NFT</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted } = Vue;
+        
+        createApp({
+            setup() {
+                // App State
+                const currentScreen = ref('splash');
+                const currentPage = ref('home');
+                const showWalletModal = ref(false);
+                const showPurchaseAlert = ref(false);
+                const purchaseDetails = ref({});
+                
+                // Auth Data
+                const username = ref('');
+                const password = ref('');
+                const walletCreated = ref(false);
+                
+                // Posts Data
+                const posts = ref([]);
+                
+                // NFT Creation Data
+                const ownershipType = ref('own');
+                const nftName = ref('');
+                const nftDescription = ref('');
+                const nftTags = ref('');
+                const nftImage = ref(null);
+                const nftImagePreview = ref('');
+                
+                // Wallet Data
+                const purchasedNFTs = ref([]);
+                const flippedNFTs = ref({});
+                
+                // Initialize with sample data
+                const initializeData = () => {
+                    // Generate sample posts
+                    const samplePosts = [
+                        {
+                            id: 1,
+                            username: "Olera Sydorenko",
+                            avatar: "https://i.pravatar.cc/150?img=1",
+                            time: "2 hours ago",
+                            title: "Sound Legacy-NFT",
+                            description: "Sound Legacy - A melody that will belong only to you, forever protected by blockchain.",
+                            tags: ["#MusicNFT", "#Blockchain", "#DigitalOwnership"],
+                            image: "https://picsum.photos/500/500?random=1",
+                            likes: 124,
+                            comments: 5,
+                            isLiked: false,
+                            showComments: false,
+                            commentsList: [
+                                { user: "NFTCollector", text: "Amazing sound!" },
+                                { user: "CryptoArtist", text: "Love this concept!" }
+                            ],
+                            newComment: ""
+                        },
+                        {
+                            id: 2,
+                            username: "Bohdan Shevchenko",
+                            avatar: "https://i.pravatar.cc/150?img=2",
+                            time: "5 hours ago",
+                            title: "Symbolic of Strength",
+                            description: "This NFT represents the strength and resilience of the human spirit in digital form.",
+                            tags: ["#ArtNFT", "#Symbolism", "#Strength"],
+                            image: "https://picsum.photos/500/500?random=2",
+                            likes: 89,
+                            comments: 3,
+                            isLiked: false,
+                            showComments: false,
+                            commentsList: [
+                                { user: "ArtLover", text: "Beautiful artwork!" }
+                            ],
+                            newComment: ""
+                        }
+                    ];
+                    
+                    posts.value = samplePosts;
+                };
+                
+                // Auth Handler
+                const handleAuth = () => {
+                    // In a real app, you would verify credentials here
+                    currentScreen.value = 'app';
+                    showWalletModal.value = true;
+                };
+                
+                // Wallet Creation
+                const createWallet = () => {
+                    walletCreated.value = true;
+                    showWalletModal.value = false;
+                    currentPage.value = 'wallet';
+                    
+                    // Generate a sample NFT for the wallet
+                    const sampleNFT = {
+                        id: Date.now(),
+                        name: "Welcome NFT",
+                        image: "https://picsum.photos/500/500?random=3",
+                        seller: "MARKIdentity",
+                        qrCode: ""
+                    };
+                    
+                    purchasedNFTs.value.push(sampleNFT);
+                    generateQRCode(sampleNFT.id);
+                };
+                
+                const skipWallet = () => {
+                    showWalletModal.value = false;
+                    currentPage.value = 'home';
+                };
+                
+                // Post Interactions
+                const toggleLike = (postId) => {
+                    const post = posts.value.find(p => p.id === postId);
+                    if (post) {
+                        post.isLiked = !post.isLiked;
+                        post.likes += post.isLiked ? 1 : -1;
+                    }
+                };
+                
+                const toggleComments = (postId) => {
+                    const post = posts.value.find(p => p.id === postId);
+                    if (post) {
+                        post.showComments = !post.showComments;
+                    }
+                };
+                
+                const addComment = (postId) => {
+                    const post = posts.value.find(p => p.id === postId);
+                    if (post && post.newComment.trim()) {
+                        post.commentsList.push({
+                            user: "You",
+                            text: post.newComment
+                        });
+                        post.comments++;
+                        post.newComment = "";
+                    }
+                };
+                
+                // NFT Purchase
+                const buyNFT = (post) => {
+                    const newNFT = {
+                        id: Date.now(),
+                        name: post.title,
+                        image: post.image,
+                        seller: post.username,
+                        qrCode: ""
+                    };
+                    
+                    purchasedNFTs.value.push(newNFT);
+                    generateQRCode(newNFT.id);
+                    
+                    purchaseDetails.value = {
+                        nftName: post.title,
+                        seller: post.username
+                    };
+                    showPurchaseAlert.value = true;
+                    
+                    setTimeout(() => {
+                        showPurchaseAlert.value = false;
+                    }, 3000);
+                };
+                
+                // NFT Creation
+                const triggerFileInput = () => {
+                    document.getElementById('nft-upload').click();
+                };
+                
+                const handleNftUpload = (event) => {
+                    const file = event.target.files[0];
+                    if (file) {
+                        nftImage.value = file;
+                        nftImagePreview.value = URL.createObjectURL(file);
+                    }
+                };
+                
+                const createNFT = () => {
+                    if (!nftName.value || !nftImage.value) {
+                        alert("Please fill all required fields");
+                        return;
+                    }
+                    
+                    const newNFT = {
+                        id: Date.now(),
+                        username: "You",
+                        avatar: "https://i.pravatar.cc/150?img=3",
+                        time: "Just now",
+                        title: nftName.value,
+                        description: nftDescription.value,
+                        tags: nftTags.value.split(',').map(tag => tag.trim()),
+                        image: nftImagePreview.value,
+                        likes: 0,
+                        comments: 0,
+                        isLiked: false,
+                        showComments: false,
+                        commentsList: [],
+                        newComment: ""
+                    };
+                    
+                    posts.value.unshift(newNFT);
+                    
+                    // Reset form
+                    nftName.value = '';
+                    nftDescription.value = '';
+                    nftTags.value = '';
+                    nftImage.value = null;
+                    nftImagePreview.value = '';
+                    
+                    currentPage.value = 'home';
+                };
+                
+                // Wallet Functions
+                const toggleFlip = (nftId) => {
+                    flippedNFTs.value[nftId] = !flippedNFTs.value[nftId];
+                };
+                
+                const generateQRCode = (nftId) => {
+                    const nft = purchasedNFTs.value.find(n => n.id === nftId);
+                    if (nft && !nft.qrCode) {
+                        setTimeout(() => {
+                            const qrContainer = document.getElementById(`qrcode-${nftId}`);
+                            if (qrContainer) {
+                                qrContainer.innerHTML = '';
+                                new QRCode(qrContainer, {
+                                    text: `NFT ID: ${nftId}\nName: ${nft.name}\nOwner: You\nCreated: ${new Date().toLocaleDateString()}`,
+                                    width: 150,
+                                    height: 150,
+                                    colorDark: "#000000",
+                                    colorLight: "#ffffff",
+                                    correctLevel: QRCode.CorrectLevel.H
+                                });
+                                nft.qrCode = qrContainer.innerHTML;
+                            }
+                        }, 100);
+                    }
+                };
+                
+                // Initialize the app
+                onMounted(() => {
+                    setTimeout(() => {
+                        currentScreen.value = 'auth';
+                    }, 2000);
+                    
+                    initializeData();
+                });
+                
+                return {
+                    // State
+                    currentScreen,
+                    currentPage,
+                    showWalletModal,
+                    showPurchaseAlert,
+                    purchaseDetails,
+                    
+                    // Auth
+                    username,
+                    password,
+                    handleAuth,
+                    createWallet,
+                    skipWallet,
+                    
+                    // Posts
+                    posts,
+                    toggleLike,
+                    toggleComments,
+                    addComment,
+                    buyNFT,
+                    
+                    // NFT Creation
+                    ownershipType,
+                    nftName,
+                    nftDescription,
+                    nftTags,
+                    nftImagePreview,
+                    triggerFileInput,
+                    handleNftUpload,
+                    createNFT,
+                    
+                    // Wallet
+                    purchasedNFTs,
+                    flippedNFTs,
+                    toggleFlip
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
